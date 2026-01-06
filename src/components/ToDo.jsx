@@ -1,31 +1,46 @@
-import { useState, useEffect } from 'react';
+import {useState, useEffect, useRef, useCallback, useMemo} from 'react';
 import ToDoList from "./ToDoList.jsx";
 import ToDoInfo from "./ToDoInfo.jsx";
 import SearchTaskForm from "./SearchTaskForm.jsx";
 import AddTaskForm from "./AddTaskForm.jsx";
+import Button from "./Button.jsx";
 
 const ToDo = () => {
-    const [tasks, setTasks] = useState([
-        { id: 1, title: 'eat', isDone: true },
-        { id: 2, title: 'drink', isDone: false },
-        { id: 3, title: 'sleep', isDone: false },
-    ]);
+    const [tasks, setTasks] = useState(() => {
+        const savedTasks = localStorage.getItem('tasks');
 
+        if (savedTasks) {
+            return JSON.parse(savedTasks);
+        }
+
+        return [
+            { id: 1, title: 'eat', isDone: true },
+            { id: 2, title: 'drink', isDone: false },
+            { id: 3, title: 'sleep', isDone: false },
+        ];
+    });
     const [newTaskTitle, setNewTaskTitle] = useState('');
+    const [searchQuery, setSearchQuery] = useState('');
 
-    const deleteAllTasks = () => {
+    const newTaskInputRef = useRef(null);
+    const firstUncompletedTaskRef = useRef(null);
+
+    const firstUncompletedTaskId = tasks.find(({ isDone }) => !isDone)?.id;
+
+
+    const deleteAllTasks = useCallback(() => {
         const isConfirmed = confirm(`Are you sure you want to delete all} tasks?`);
 
         if (isConfirmed) {
             setTasks([]);
         }
-    }
+    }, []);
 
-    const deleteTask = (taskId) => {
+    const deleteTask = useCallback((taskId) => {
         setTasks(tasks.filter((task) => task.id !== taskId));
-    }
+    }, [tasks]);
 
-    const toggleTaskComplete = (taskId, isDone) => {
+    const toggleTaskComplete = useCallback((taskId, isDone) => {
         setTasks(tasks.map((task) => {
             if (task.id === taskId) {
                 task.isDone = isDone;
@@ -33,35 +48,43 @@ const ToDo = () => {
 
             return task;
         }));
-    }
+    },[tasks]);
 
-    const filterTasks = (query) => {
-        console.log(`Search tasks for ${query}`);
-    }
-
-    const addTask = () => {
-        if (newTaskTitle.trim().length > 0) {
+    const addTask = useCallback(() => {
+        if (newTaskTitle?.trim()?.length > 0) {
             const newTask = {
                 id: crypto?.randomUUID() ?? Date.now().toString(),
                 title: newTaskTitle,
                 isDone: false,
             }
 
-            setTasks([...tasks, newTask]);
+            setTasks((tasks) => {
+                return [...tasks, newTask];
+            });
             setNewTaskTitle('');
+            setSearchQuery('');
+            newTaskInputRef.current?.focus();
         }
-    }
+    }, [newTaskTitle]);
 
     useEffect(() => {
-        console.log(`Component ToDo is mounted, loading data from storage`);
-        const savedTasks = localStorage.getItem('tasks');
+        tasks && localStorage.setItem('tasks', JSON.stringify(tasks));
+    }, [tasks]);
 
-        savedTasks && setTasks(JSON.parse(savedTasks))
+    useEffect(() => {
+        newTaskInputRef.current.focus();
     }, []);
 
-    useEffect(() => {
-        console.log(`Saving data to storage cause tasks are updated`);
-        localStorage.setItem('tasks', JSON.stringify(tasks));
+    const filteredTasks = useMemo(() => {
+        const clearSearchQuery = searchQuery.trim().toLowerCase();
+
+        return clearSearchQuery.length > 0
+            ? tasks.filter(({ title }) => title.toLowerCase().includes(clearSearchQuery))
+            : null;
+    }, [searchQuery, tasks]);
+
+    const doneTasks = useMemo(() => {
+        return tasks?.filter(({isDone}) => isDone).length
     }, [tasks]);
 
     return (
@@ -69,17 +92,29 @@ const ToDo = () => {
             <h1 className="todo__title">To Do List</h1>
             <AddTaskForm
                 addTask={addTask}
-                newTasktitle={newTaskTitle}
+                newTaskInputRef={newTaskInputRef}
+                newTaskTitle={newTaskTitle}
                 setNewTaskTitle={setNewTaskTitle}
             />
-            <SearchTaskForm onSearchInput={filterTasks} />
+            <SearchTaskForm
+                searchQuery={searchQuery}
+                setSearchQuery={setSearchQuery}
+            />
             <ToDoInfo
-                countAll={tasks.length}
-                countCompleted={tasks.filter(({isDone}) => isDone).length}
+                countAll={tasks?.length}
+                countCompleted={doneTasks}
                 onDeleteAllButtonClick={deleteAllTasks}
             />
+            <Button
+                onClick={() => firstUncompletedTaskRef.current?.scrollIntoView({smooth: true})}
+            >
+                Show first uncompleted task
+            </Button>
             <ToDoList
                 tasks={tasks}
+                filteredTasks={filteredTasks}
+                firstUncompletedTaskRef={firstUncompletedTaskRef}
+                firstUncompletedTaskId={firstUncompletedTaskId}
                 onDeleteTaskButtonClick={deleteTask}
                 onTaskCompleteChange={toggleTaskComplete}
             />
@@ -87,4 +122,4 @@ const ToDo = () => {
     )
 }
 
-export default ToDo;;
+export default ToDo;

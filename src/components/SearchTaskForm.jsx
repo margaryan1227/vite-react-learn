@@ -1,7 +1,8 @@
 import Field from "./Field.jsx";
 
 const SearchTaskForm = ({
-    onSearchInput
+    searchQuery,
+    setSearchQuery
 }) => {
     return (
         <form
@@ -13,7 +14,8 @@ const SearchTaskForm = ({
                 id="search-task"
                 label="Search task "
                 type="search"
-                onInput={(event) => onSearchInput(event.target.value)}
+                value={searchQuery}
+                onInput={(event) => setSearchQuery(event.target.value)}
             />
         </form>
     )

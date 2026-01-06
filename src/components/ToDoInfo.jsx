@@ -1,3 +1,5 @@
+import {memo} from "react";
+
 const ToDoInfo = ({
     countAll,
     countCompleted,
@@ -21,4 +23,4 @@ const ToDoInfo = ({
     )
 }
 
-export default ToDoInfo
+export default memo(ToDoInfo)

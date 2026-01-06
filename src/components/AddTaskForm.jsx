@@ -3,6 +3,7 @@ import Button from "./Button.jsx";
 
 const AddTaskForm = ({
     addTask,
+    newTaskInputRef,
     newTaskTitle,
     setNewTaskTitle,
 }) => {
@@ -18,6 +19,7 @@ const AddTaskForm = ({
                 className="todo__field"
                 label="New task title"
                 id="new-task"
+                ref={newTaskInputRef}
                 value={newTaskTitle}
                 onInput={(e) => setNewTaskTitle(e.target.value)}
             />
