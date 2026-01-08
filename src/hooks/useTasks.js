@@ -1,18 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import useTasksLocalStorage from "./useTasksLocalStorage.js";
+import tasksAPI from '../api/tasksAPI.js';
 
 const useTasks = () => {
-    const {
-        savedTasks,
-        saveTasks
-    } = useTasksLocalStorage();
-
-
-    const [tasks, setTasks] = useState(savedTasks ?? [
-                { id: 1, title: 'eat', isDone: true },
-                { id: 2, title: 'drink', isDone: false },
-                { id: 3, title: 'sleep', isDone: false },
-            ]);
+    const [tasks, setTasks] = useState([]);
 
     const [newTaskTitle, setNewTaskTitle] = useState('');
     const [searchQuery, setSearchQuery] = useState('');
@@ -24,45 +14,58 @@ const useTasks = () => {
         const isConfirmed = confirm(`Are you sure you want to delete all} tasks?`);
 
         if (isConfirmed) {
-            setTasks([]);
+            tasksAPI
+                .deleteAll(tasks)
+                .then(() => setTasks([]));
         }
-    }, []);
+    }, [tasks]);
 
     const deleteTask = useCallback((taskId) => {
-        setTasks(tasks.filter((task) => task.id !== taskId));
+        tasksAPI
+            .delete(taskId)
+            .then(() => {
+                setTasks(tasks.filter((task) => task.id !== taskId));
+            });
     }, [tasks]);
 
     const toggleTaskComplete = useCallback((taskId, isDone) => {
-        setTasks(tasks.map((task) => {
-            if (task.id === taskId) {
-                task.isDone = isDone;
-            }
+        tasksAPI
+            .toggleComplete(taskId, isDone)
+            .then(() => {
+                setTasks(tasks.map((task) => {
+                    if (task.id === taskId) {
+                        task.isDone = isDone;
+                    }
 
-            return task;
-        }));
-    },[tasks]);
+                    return task;
+                }));
+            });
+        },[tasks]);
 
     const addTask = useCallback((title) => {
         const newTask = {
-            id: crypto?.randomUUID() ?? Date.now().toString(),
             title,
             isDone: false,
         }
 
-        setTasks((tasks) => {
-            return [...tasks, newTask];
-        });
-        setNewTaskTitle('');
-        setSearchQuery('');
-        newTaskInputRef.current?.focus();
+        tasksAPI
+            .add(newTask)
+            .then(addedTask => {
+                setTasks((tasks) => {
+                    return [...tasks, addedTask];
+                });
+                setNewTaskTitle('');
+                setSearchQuery('');
+                newTaskInputRef.current?.focus();
+            });
     }, []);
 
     useEffect(() => {
-        saveTasks(tasks);
-    }, [tasks, saveTasks]);
-
-    useEffect(() => {
         newTaskInputRef.current.focus();
+
+        tasksAPI
+            .getAll()
+            .then(setTasks);
     }, []);
 
     const filteredTasks = useMemo(() => {
