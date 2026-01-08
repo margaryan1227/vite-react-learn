@@ -1,1 +1,34 @@
-{tasks:[{id:'d500',title:'d',isDone:true},{id:'d10f',title:'12',isDone:false},{id:'8738',title:'d',isDone:false},{id:'8065',title:'as',isDone:false},{id:'82ed',title:'s',isDone:false}]}
+{
+  tasks: [
+    {
+      id: 'd500',
+      title: 'd',
+      isDone: true
+    },
+    {
+      id: 'd10f',
+      title: '12',
+      isDone: false
+    },
+    {
+      id: '8738',
+      title: 'd',
+      isDone: false
+    },
+    {
+      id: '8065',
+      title: 'as',
+      isDone: false
+    },
+    {
+      id: '82ed',
+      title: 's',
+      isDone: false
+    },
+    {
+      id: '123',
+      title: 'Example',
+      isDone: false
+    }
+  ]
+}
